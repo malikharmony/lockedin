@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 text-center mb-4">
+      <h1 class="text-primary fw-bold">Join our community today for Free!</h1>
+    </div>
+
+    <div class="col-11 col-sm-9 col-md-7 col-lg-5">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+          <h2 class="card-title text-center text-muted fs-5 mb-3">Sign Up</h2>
+          <hr class="my-3 text-secondary">
+
+          <form method="post" action="{% url 'accounts.signup' %}">
+            {% csrf_token %}
+
+            <!-- Username Field -->
+            <div class="mb-3">
+              <label for="username" class="form-label fw-medium">Username:</label>
+              <input type="text" class="form-control" id="username" name="username" placeholder="johndoe" required>
+            </div>
+
+            <!-- Email Field -->
+            <div class="mb-3">
+              <label for="email" class="form-label fw-medium">Email:</label>
+              <input type="email" class="form-control" id="email" name="email" placeholder="johndoe@mail.com" required>
+            </div>
+
+            <!-- Password Field -->
+            <div class="mb-3">
+              <label for="password" class="form-label fw-medium">Password:</label>
+              <input type="password" class="form-control" id="password" name="password" placeholder="********" required>
+            </div>
+
+            <!-- Role Selection -->
+            <div class="d-flex justify-content-center gap-4 my-3">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="role" id="roleJobSeeker" value="job_seeker" checked>
+                <label class="form-check-label" for="roleJobSeeker">Job Seeker</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="role" id="roleEmployer" value="employer">
+                <label class="form-check-label" for="roleEmployer">Employer</label>
+              </div>
+            </div>
+
+            <!-- Action Row: Forgot Password & Sign Up Button -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <a href="#" class="text-primary text-decoration-none small">Forgot Password?</a>
+              <button type="submit" class="btn btn-primary px-4">Sign Up</button>
+            </div>
+
+            <hr class="my-3 text-secondary">
+
+            <!-- Already a Member Link -->
+            <div class="text-center">
+              <span class="text-muted small">Already a member? </span>
+              <a href="{% url 'accounts.login' %}" class="text-primary text-decoration-none small fw-medium">Sign in</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}

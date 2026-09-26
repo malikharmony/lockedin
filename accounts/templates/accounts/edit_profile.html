@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4 p-md-5">
+          <h2 class="card-title text-primary fw-bold mb-2">Edit Your Profile</h2>
+          <p class="text-muted mb-4">Complete your profile information to connect with jobs and opportunities.</p>
+          <hr class="mb-4">
+
+          <form method="post" action="{% url 'accounts.edit_profile' %}">
+            {% csrf_token %}
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label for="first_name" class="form-label fw-medium">First Name</label>
+                <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}" required>
+              </div>
+              <div class="col-md-6">
+                <label for="last_name" class="form-label fw-medium">Last Name</label>
+                <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}" required>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="username" class="form-label fw-medium">Username</label>
+              <div class="input-group">
+                <span class="input-group-text">/</span>
+                <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+              </div>
+              <div class="form-text">This will be your unique profile URL: /{{ user.username }}.</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="headline" class="form-label fw-medium">Headline</label>
+              <input type="text" class="form-control" id="headline" name="headline" value="{{ profile.headline }}">
+            </div>
+
+            <div class="mb-3">
+              <label for="about" class="form-label fw-medium">About</label>
+              <textarea class="form-control" id="about" name="about" rows="3">{{ profile.about }}</textarea>
+            </div>
+
+            <div class="mb-3">
+              <label for="education" class="form-label fw-medium">Education</label>
+              <textarea class="form-control" id="education" name="education" rows="3">{{ profile.education }}</textarea>
+            </div>
+
+            <div class="mb-3">
+              <label for="experience" class="form-label fw-medium">Experience</label>
+              <textarea class="form-control" id="experience" name="experience" rows="3">{{ profile.experience }}</textarea>
+            </div>
+
+            <div class="mb-4">
+              <label for="skills" class="form-label fw-medium">Skills</label>
+              <textarea class="form-control" id="skills" name="skills" rows="2">{{ profile.skills }}</textarea>
+            </div>
+
+            <hr class="my-4">
+            <div class="d-flex justify-content-end gap-2">
+              <a href="{% url 'accounts.profile' username=user.username %}" class="btn btn-outline-secondary">Skip for Now</a>
+              <button type="submit" class="btn btn-primary px-4">Save Profile</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}
