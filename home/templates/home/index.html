@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<section class="container py-5">
+  <div class="row align-items-center py-5">
+      <div class="col-lg-6 mb-5 mb-lg-0">
+          <h1 class="display-5 fw-bold text-primary mb-4">Search for Jobs or List a Position Today</h1>
+          <div class="d-flex flex-column flex-sm-row gap-3">
+              <a href="{% url 'accounts.index' %}" class="btn btn-primary btn-lg px-4">Join Us</a>
+              <a href="{% url 'accounts.index' %}" class="btn btn-outline-primary btn-lg px-4">Sign In</a>
+          </div>
+      </div>
+  </div>
+</section>
+{% endblock content %}
