@@ -94,6 +94,8 @@ def edit_profile(request):
         education = request.POST.get('education', '').strip()
         experience = request.POST.get('experience', '').strip()
         skills = request.POST.get('skills', '').strip()
+        location = request.POST.get('location', '').strip()
+        projects = request.POST.get('projects', '').strip()
 
         if username and username.lower() != request.user.username.lower():
             if User.objects.filter(username__iexact=username).exists():
@@ -114,6 +116,8 @@ def edit_profile(request):
         profile.education = education
         profile.experience = experience
         profile.skills = skills
+        profile.projects = projects
+        profile.location = location
         profile.save()
 
         messages.success(request, 'Your profile has been saved!')
