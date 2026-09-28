@@ -53,9 +53,9 @@
 
               <div class="job-card-footer d-flex justify-content-between align-items-center gap-3 mt-auto">
                 <span class="recruiter-name">{{ job.recruiter.username }}</span>
-                <button type="button" class="btn btn-primary btn-sm px-3" disabled>
+                <a href="{% url 'jobs.detail' id=job.id %}" class="btn btn-primary btn-sm px-3">
                   View role
-                </button>
+                </a>
               </div>
             </article>
           </div>

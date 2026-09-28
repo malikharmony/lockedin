@@ -1,7 +1,8 @@
+from django.core.mail import send_mail
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from jobs.models import JobPosting
+from jobs.models import JobPosting, JobApplication
 from accounts.models import Profile
 from django.shortcuts import get_object_or_404
 
@@ -13,6 +14,127 @@ def index(request):
         'jobs': jobs,
     }
     return render(request, 'jobs/index.html', context={'template_data': template_data})
+
+
+def detail(request, id):
+    job = get_object_or_404(JobPosting, id=id, status='active')
+    template_data = {
+        'title': f'{job.title} | LockedIn',
+    }
+
+    return render(request, 'jobs/detail.html', {
+        'template_data': template_data,
+        'job': job,
+        'is_applied': request.user.is_authenticated and request.user.job_applications.filter(job=job).exists(),
+    })
+
+
+@login_required
+def apply(request, id):
+    job = get_object_or_404(JobPosting, id=id, status='active')
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    if profile.role != 'job_seeker':
+        messages.error(request, 'Only job seekers can apply to positions.')
+        return redirect('jobs.detail', id=job.id)
+
+    cover_letter = (request.POST.get('cover_letter', '') or '').strip()
+
+    application, created = JobApplication.objects.get_or_create(
+        job=job,
+        applicant=request.user,
+        defaults={'cover_letter': cover_letter, 'status': 'applied'},
+    )
+
+    if not created:
+        application.cover_letter = cover_letter or application.cover_letter
+        application.status = 'applied'
+        application.save()
+
+    if cover_letter:
+        application.cover_letter = cover_letter
+        application.save()
+
+    profile_summary = [
+        f"Name: {request.user.get_full_name() or request.user.username}",
+        f"Username: {request.user.username}",
+        f"Email: {request.user.email or 'Not provided'}",
+        f"Headline: {profile.headline or 'Not provided'}",
+        f"Skills: {profile.skills or 'Not provided'}",
+        f"Experience: {profile.experience or 'Not provided'}",
+        f"About: {profile.about or 'Not provided'}",
+        f"Cover Letter: {cover_letter or 'No cover letter provided'}",
+    ]
+
+    employer_email = job.recruiter.email or 'noreply@lockedin.local'
+    send_mail(
+        subject=f'New application for {job.title}',
+        message='\n'.join(profile_summary),
+        from_email='noreply@lockedin.local',
+        recipient_list=[employer_email],
+        fail_silently=True,
+    )
+
+    messages.success(request, 'Your profile information has been sent to the employer.')
+    return redirect('jobs.detail', id=job.id)
+
+
+@login_required
+def applications(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    if profile.role != 'job_seeker':
+        messages.error(request, 'This page is only for applicants.')
+        return redirect('home.index')
+
+    applications = JobApplication.objects.filter(
+        applicant=request.user
+    ).select_related('job', 'job__recruiter').order_by('-submitted_at')
+
+    template_data = {
+        'title': 'My Applications | LockedIn',
+    }
+
+    return render(request, 'jobs/applications.html', {
+        'template_data': template_data,
+        'applications': applications,
+    })
+
+
+@login_required
+def applicants(request, id):
+    job = get_object_or_404(JobPosting, id=id, recruiter=request.user)
+
+    if request.method == 'POST':
+        application_id = request.POST.get('application_id')
+        status = request.POST.get('status', '').strip()
+
+        if application_id:
+            application = get_object_or_404(job.applications, id=application_id)
+            valid_statuses = ['applied', 'review', 'interview', 'offer', 'closed']
+
+            if status in valid_statuses:
+                application.status = status
+                application.save()
+                if status == 'closed':
+                    messages.success(request, f'{application.applicant.username} was denied and marked as closed.')
+                else:
+                    messages.success(request, f'{application.applicant.username} status updated to {application.status_label}.')
+            else:
+                messages.error(request, 'Invalid application status.')
+
+        return redirect('jobs.applicants', id=job.id)
+
+    applications = job.applications.select_related('applicant').order_by('-submitted_at')
+    template_data = {
+        'title': f'Applicants for {job.title} | LockedIn',
+    }
+
+    return render(request, 'jobs/applicants.html', {
+        'template_data': template_data,
+        'job': job,
+        'applications': applications,
+    })
 
 @login_required
 def create_job(request):
