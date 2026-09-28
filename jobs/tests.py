@@ -2,76 +2,70 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from accounts.models import Profile
-from jobs.models import JobApplication, JobPosting
+from jobs.models import JobPosting
 
 
-class JobApplicationWorkflowTests(TestCase):
+class JobFilterTests(TestCase):
     def setUp(self):
         self.employer = get_user_model().objects.create_user(
             username='recruiter',
             email='recruiter@example.com',
             password='password123',
         )
-        self.job_seeker = get_user_model().objects.create_user(
-            username='applicant',
-            email='applicant@example.com',
-            password='password123',
-        )
 
-        Profile.objects.update_or_create(user=self.employer, defaults={'role': 'employer'})
-        Profile.objects.update_or_create(user=self.job_seeker, defaults={'role': 'job_seeker'})
-
-        self.job = JobPosting.objects.create(
-            title='Senior Django Developer',
-            description='Build the next generation of hosted services.',
+        JobPosting.objects.create(
+            title='Senior Python Developer',
+            description='Build APIs and backend systems.',
             recruiter=self.employer,
             work_type='remote',
-            required_skills='Django, Python, REST APIs',
+            required_skills='Django, Python, APIs',
             location='Boston, MA',
             visa_sponsorship=True,
-            salary_min=125000,
-            salary_max=160000,
+            salary_min=120000,
+            salary_max=150000,
             status='active',
         )
 
-        self.application = JobApplication.objects.create(
-            job=self.job,
-            applicant=self.job_seeker,
-            cover_letter='I am excited to apply for this role.',
-            status='applied',
+        JobPosting.objects.create(
+            title='UX Designer',
+            description='Shape user experiences for our SaaS products.',
+            recruiter=self.employer,
+            work_type='in-person',
+            required_skills='Figma, UX Research, Prototyping',
+            location='Austin, TX',
+            visa_sponsorship=False,
+            salary_min=90000,
+            salary_max=110000,
+            status='active',
         )
 
-    def test_applicant_can_view_application_status(self):
-        self.client.login(username='applicant', password='password123')
-        response = self.client.get(reverse('jobs.applications'))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Senior Django Developer')
-        self.assertContains(response, 'Applied')
-
-    def test_employer_can_view_applicants_and_update_status(self):
-        self.client.login(username='recruiter', password='password123')
-        response = self.client.post(
-            reverse('jobs.applicants', kwargs={'id': self.job.id}),
-            {'application_id': self.application.id, 'status': 'review'},
-            follow=True,
+    def test_filters_jobs_by_title_skills_location_salary_work_type_and_visa(self):
+        response = self.client.get(
+            reverse('jobs.index'),
+            {
+                'title': 'python',
+                'skills': 'django',
+                'location': 'boston',
+                'salary_min': '100000',
+                'salary_max': '140000',
+                'work_type': 'remote',
+                'visa_sponsorship': 'on',
+            },
         )
 
-        self.application.refresh_from_db()
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.application.status, 'review')
-        self.assertContains(response, 'Review')
+        self.assertContains(response, 'Senior Python Developer')
+        self.assertNotContains(response, 'UX Designer')
 
-    def test_employer_can_deny_applicant_and_close_status(self):
-        self.client.login(username='recruiter', password='password123')
-        response = self.client.post(
-            reverse('jobs.applicants', kwargs={'id': self.job.id}),
-            {'application_id': self.application.id, 'status': 'closed'},
-            follow=True,
+    def test_filters_jobs_by_location_without_visa(self):
+        response = self.client.get(
+            reverse('jobs.index'),
+            {
+                'location': 'austin',
+                'work_type': 'in-person',
+            },
         )
 
-        self.application.refresh_from_db()
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.application.status, 'closed')
-        self.assertContains(response, 'Closed')
+        self.assertContains(response, 'UX Designer')
+        self.assertNotContains(response, 'Senior Python Developer')

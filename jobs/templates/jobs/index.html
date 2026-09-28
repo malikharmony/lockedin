@@ -13,6 +13,54 @@
       </span>
     </div>
 
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-4">
+        <form method="get" action="{% url 'jobs.index' %}" class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label fw-medium" for="title">Title</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ template_data.filters.title }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-medium" for="skills">Skills</label>
+            <input type="text" class="form-control" id="skills" name="skills" value="{{ template_data.filters.skills }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-medium" for="location">Location</label>
+            <input type="text" class="form-control" id="location" name="location" value="{{ template_data.filters.location }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-medium" for="work_type">Remote / On-site</label>
+            <select class="form-select" id="work_type" name="work_type">
+              <option value="">All</option>
+              <option value="remote" {% if template_data.filters.work_type == 'remote' %}selected{% endif %}>Remote</option>
+              <option value="hybrid" {% if template_data.filters.work_type == 'hybrid' %}selected{% endif %}>Hybrid</option>
+              <option value="in-person" {% if template_data.filters.work_type == 'in-person' %}selected{% endif %}>On-site</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-medium" for="salary_min">Min Salary</label>
+            <input type="number" class="form-control" id="salary_min" name="salary_min" min="0" value="{{ template_data.filters.salary_min }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-medium" for="salary_max">Max Salary</label>
+            <input type="number" class="form-control" id="salary_max" name="salary_max" min="0" value="{{ template_data.filters.salary_max }}">
+          </div>
+          <div class="col-md-3 d-flex align-items-end">
+            <div class="form-check mt-4">
+              <input class="form-check-input" type="checkbox" id="visa_sponsorship" name="visa_sponsorship" {% if template_data.filters.visa_sponsorship == 'on' %}checked{% endif %}>
+              <label class="form-check-label fw-medium" for="visa_sponsorship">
+                Visa sponsorship
+              </label>
+            </div>
+          </div>
+          <div class="col-md-3 d-flex align-items-end justify-content-md-end gap-2">
+            <a href="{% url 'jobs.index' %}" class="btn btn-outline-secondary">Clear</a>
+            <button type="submit" class="btn btn-primary">Apply filters</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     {% if template_data.jobs %}
       <div class="row g-4">
         {% for job in template_data.jobs %}
@@ -65,8 +113,8 @@
       <div class="empty-jobs card border-0 shadow-sm">
         <div class="card-body text-center py-5">
           <i class="fa-regular fa-folder-open fa-3x text-muted mb-3" aria-hidden="true"></i>
-          <h2 class="h4 text-primary mb-2">No active jobs right now</h2>
-          <p class="text-muted mb-0">Check back soon for new opportunities.</p>
+          <h2 class="h4 text-primary mb-2">No jobs match your filters</h2>
+          <p class="text-muted mb-0">Try adjusting the search terms or clearing a few options.</p>
         </div>
       </div>
     {% endif %}

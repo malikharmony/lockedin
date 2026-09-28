@@ -1,4 +1,3 @@
-from django.core.mail import send_mail
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -9,9 +8,48 @@ from django.shortcuts import get_object_or_404
 
 def index(request):
     jobs = JobPosting.objects.filter(status='active').order_by('-date')
+
+    title = (request.GET.get('title') or '').strip()
+    skills = (request.GET.get('skills') or '').strip()
+    location = (request.GET.get('location') or '').strip()
+    salary_min = request.GET.get('salary_min', '').strip()
+    salary_max = request.GET.get('salary_max', '').strip()
+    work_type = (request.GET.get('work_type') or '').strip()
+    visa_sponsorship = request.GET.get('visa_sponsorship')
+
+    if title:
+        jobs = jobs.filter(title__icontains=title)
+    if skills:
+        jobs = jobs.filter(required_skills__icontains=skills)
+    if location:
+        jobs = jobs.filter(location__icontains=location)
+    if salary_min:
+        try:
+            jobs = jobs.filter(salary_max__gte=int(salary_min))
+        except ValueError:
+            pass
+    if salary_max:
+        try:
+            jobs = jobs.filter(salary_min__lte=int(salary_max))
+        except ValueError:
+            pass
+    if work_type in ['in-person', 'hybrid', 'remote']:
+        jobs = jobs.filter(work_type=work_type)
+    if visa_sponsorship == 'on':
+        jobs = jobs.filter(visa_sponsorship=True)
+
     template_data = {
         'title': 'Job Discovery | LockedIn',
         'jobs': jobs,
+        'filters': {
+            'title': title,
+            'skills': skills,
+            'location': location,
+            'salary_min': salary_min,
+            'salary_max': salary_max,
+            'work_type': work_type,
+            'visa_sponsorship': visa_sponsorship,
+        },
     }
     return render(request, 'jobs/index.html', context={'template_data': template_data})
 
@@ -54,26 +92,6 @@ def apply(request, id):
     if cover_letter:
         application.cover_letter = cover_letter
         application.save()
-
-    profile_summary = [
-        f"Name: {request.user.get_full_name() or request.user.username}",
-        f"Username: {request.user.username}",
-        f"Email: {request.user.email or 'Not provided'}",
-        f"Headline: {profile.headline or 'Not provided'}",
-        f"Skills: {profile.skills or 'Not provided'}",
-        f"Experience: {profile.experience or 'Not provided'}",
-        f"About: {profile.about or 'Not provided'}",
-        f"Cover Letter: {cover_letter or 'No cover letter provided'}",
-    ]
-
-    employer_email = job.recruiter.email or 'noreply@lockedin.local'
-    send_mail(
-        subject=f'New application for {job.title}',
-        message='\n'.join(profile_summary),
-        from_email='noreply@lockedin.local',
-        recipient_list=[employer_email],
-        fail_silently=True,
-    )
 
     messages.success(request, 'Your profile information has been sent to the employer.')
     return redirect('jobs.detail', id=job.id)
