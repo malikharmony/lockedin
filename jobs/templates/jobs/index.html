@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="jobs-index py-5">
+  <div class="container">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <div>
+        <p class="section-label text-uppercase mb-2">Career opportunities</p>
+        <h1 class="page-title mb-0 text-primary fw-bold">Open job postings</h1>
+      </div>
+      <span class="jobs-count badge rounded-pill text-bg-light border px-3 py-2">
+        {{ template_data.jobs|length }} active roles
+      </span>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-4">
+        <form method="get" action="{% url 'jobs.index' %}" class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label fw-medium" for="title">Title</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ template_data.filters.title }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-medium" for="skills">Skills</label>
+            <input type="text" class="form-control" id="skills" name="skills" value="{{ template_data.filters.skills }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-medium" for="location">Location</label>
+            <input type="text" class="form-control" id="location" name="location" value="{{ template_data.filters.location }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-medium" for="work_type">Remote / On-site</label>
+            <select class="form-select" id="work_type" name="work_type">
+              <option value="">All</option>
+              <option value="remote" {% if template_data.filters.work_type == 'remote' %}selected{% endif %}>Remote</option>
+              <option value="hybrid" {% if template_data.filters.work_type == 'hybrid' %}selected{% endif %}>Hybrid</option>
+              <option value="in-person" {% if template_data.filters.work_type == 'in-person' %}selected{% endif %}>On-site</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-medium" for="salary_min">Min Salary</label>
+            <input type="number" class="form-control" id="salary_min" name="salary_min" min="0" value="{{ template_data.filters.salary_min }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-medium" for="salary_max">Max Salary</label>
+            <input type="number" class="form-control" id="salary_max" name="salary_max" min="0" value="{{ template_data.filters.salary_max }}">
+          </div>
+          <div class="col-md-3 d-flex align-items-end">
+            <div class="form-check mt-4">
+              <input class="form-check-input" type="checkbox" id="visa_sponsorship" name="visa_sponsorship" {% if template_data.filters.visa_sponsorship == 'on' %}checked{% endif %}>
+              <label class="form-check-label fw-medium" for="visa_sponsorship">
+                Visa sponsorship
+              </label>
+            </div>
+          </div>
+          <div class="col-md-3 d-flex align-items-end justify-content-md-end gap-2">
+            <a href="{% url 'jobs.index' %}" class="btn btn-outline-secondary">Clear</a>
+            <button type="submit" class="btn btn-primary">Apply filters</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {% if template_data.jobs %}
+      <div class="row g-4">
+        {% for job in template_data.jobs %}
+          <div class="col-12 col-md-6 col-xl-4">
+            <article class="job-card h-100">
+              <div class="job-card-top d-flex justify-content-between align-items-center mb-3">
+                <span class="job-type-badge">{{ job.get_work_type_display }}</span>
+                {% if job.visa_sponsorship %}
+                  <span class="job-tag visa-tag">Visa sponsorship</span>
+                {% endif %}
+              </div>
+
+              <h2 class="job-title h4 text-primary fw-bold mb-2">{{ job.title }}</h2>
+
+              <div class="job-meta mb-3">
+                <i class="fa-solid fa-location-dot me-2" aria-hidden="true"></i>
+                {{ job.location }}
+              </div>
+
+              <p class="job-description text-muted mb-3">
+                {{ job.description|truncatechars:180 }}
+              </p>
+
+              <div class="job-details mb-3">
+                <div class="detail-row">
+                  <span class="detail-label">Skills</span>
+                  <span>{{ job.required_skills }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Salary</span>
+                  <span>${{ job.salary_min }} - ${{ job.salary_max }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Posted</span>
+                  <span>{{ job.date }}</span>
+                </div>
+              </div>
+
+              <div class="job-card-footer d-flex justify-content-between align-items-center gap-3 mt-auto">
+                <span class="recruiter-name">{{ job.recruiter.username }}</span>
+                <a href="{% url 'jobs.detail' id=job.id %}" class="btn btn-primary btn-sm px-3">
+                  View role
+                </a>
+              </div>
+            </article>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-jobs card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+          <i class="fa-regular fa-folder-open fa-3x text-muted mb-3" aria-hidden="true"></i>
+          <h2 class="h4 text-primary mb-2">No jobs match your filters</h2>
+          <p class="text-muted mb-0">Try adjusting the search terms or clearing a few options.</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock content %}

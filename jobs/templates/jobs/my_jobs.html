@@ -53,10 +53,16 @@
               </div>
 
               {% if job.status != 'removed' %}
-              <a href="{% url 'jobs.edit' id=job.id %}"
-                class="btn btn-outline-primary">
-                Edit
-              </a>
+              <div class="d-flex gap-2 flex-wrap">
+                <a href="{% url 'jobs.applicants' id=job.id %}"
+                  class="btn btn-outline-primary">
+                  View applicants
+                </a>
+                <a href="{% url 'jobs.edit' id=job.id %}"
+                  class="btn btn-outline-primary">
+                  Edit
+                </a>
+              </div>
               {% endif %}
             </div>
 

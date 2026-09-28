@@ -1,13 +1,196 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from jobs.models import JobPosting
+from jobs.models import JobPosting, JobApplication
 from accounts.models import Profile
 from django.shortcuts import get_object_or_404
 
 
 def index(request):
-    return render(request, 'jobs/index.html')
+    jobs = JobPosting.objects.filter(status='active').order_by('-date')
+
+    title = (request.GET.get('title') or '').strip()
+    skills = (request.GET.get('skills') or '').strip()
+    location = (request.GET.get('location') or '').strip()
+    salary_min = request.GET.get('salary_min', '').strip()
+    salary_max = request.GET.get('salary_max', '').strip()
+    work_type = (request.GET.get('work_type') or '').strip()
+    visa_sponsorship = request.GET.get('visa_sponsorship')
+
+    if title:
+        jobs = jobs.filter(title__icontains=title)
+    if skills:
+        jobs = jobs.filter(required_skills__icontains=skills)
+    if location:
+        jobs = jobs.filter(location__icontains=location)
+    if salary_min:
+        try:
+            jobs = jobs.filter(salary_max__gte=int(salary_min))
+        except ValueError:
+            pass
+    if salary_max:
+        try:
+            jobs = jobs.filter(salary_min__lte=int(salary_max))
+        except ValueError:
+            pass
+    if work_type in ['in-person', 'hybrid', 'remote']:
+        jobs = jobs.filter(work_type=work_type)
+    if visa_sponsorship == 'on':
+        jobs = jobs.filter(visa_sponsorship=True)
+
+    template_data = {
+        'title': 'Job Discovery | LockedIn',
+        'jobs': jobs,
+        'filters': {
+            'title': title,
+            'skills': skills,
+            'location': location,
+            'salary_min': salary_min,
+            'salary_max': salary_max,
+            'work_type': work_type,
+            'visa_sponsorship': visa_sponsorship,
+        },
+    }
+    return render(request, 'jobs/index.html', context={'template_data': template_data})
+
+
+@login_required
+def for_you(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    if profile.role != 'job_seeker':
+        messages.error(request, 'This page is only for job seekers.')
+        return redirect('home.index')
+
+    user_skills = {
+        skill.strip().lower()
+        for skill in (profile.skills or '').replace(',', ' ').split()
+        if skill.strip()
+    }
+
+    jobs = JobPosting.objects.filter(status='active').order_by('-date')
+    recommended_jobs = []
+
+    if user_skills:
+        for job in jobs:
+            job_skills = {
+                skill.strip().lower()
+                for skill in (job.required_skills or '').replace(',', ' ').split()
+                if skill.strip()
+            }
+            if user_skills & job_skills:
+                recommended_jobs.append(job)
+
+    template_data = {
+        'title': 'For You | LockedIn',
+    }
+
+    return render(request, 'jobs/for_you.html', {
+        'template_data': template_data,
+        'jobs': recommended_jobs,
+        'has_profile_skills': bool(user_skills),
+    })
+
+
+def detail(request, id):
+    job = get_object_or_404(JobPosting, id=id, status='active')
+    template_data = {
+        'title': f'{job.title} | LockedIn',
+    }
+
+    return render(request, 'jobs/detail.html', {
+        'template_data': template_data,
+        'job': job,
+        'is_applied': request.user.is_authenticated and request.user.job_applications.filter(job=job).exists(),
+    })
+
+
+@login_required
+def apply(request, id):
+    job = get_object_or_404(JobPosting, id=id, status='active')
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    if profile.role != 'job_seeker':
+        messages.error(request, 'Only job seekers can apply to positions.')
+        return redirect('jobs.detail', id=job.id)
+
+    cover_letter = (request.POST.get('cover_letter', '') or '').strip()
+
+    application, created = JobApplication.objects.get_or_create(
+        job=job,
+        applicant=request.user,
+        defaults={'cover_letter': cover_letter, 'status': 'applied'},
+    )
+
+    if not created:
+        application.cover_letter = cover_letter or application.cover_letter
+        application.status = 'applied'
+        application.save()
+
+    if cover_letter:
+        application.cover_letter = cover_letter
+        application.save()
+
+    messages.success(request, 'Your profile information has been sent to the employer.')
+    return redirect('jobs.detail', id=job.id)
+
+
+@login_required
+def applications(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    if profile.role != 'job_seeker':
+        messages.error(request, 'This page is only for applicants.')
+        return redirect('home.index')
+
+    applications = JobApplication.objects.filter(
+        applicant=request.user
+    ).select_related('job', 'job__recruiter').order_by('-submitted_at')
+
+    template_data = {
+        'title': 'My Applications | LockedIn',
+    }
+
+    return render(request, 'jobs/applications.html', {
+        'template_data': template_data,
+        'applications': applications,
+    })
+
+
+@login_required
+def applicants(request, id):
+    job = get_object_or_404(JobPosting, id=id, recruiter=request.user)
+
+    if request.method == 'POST':
+        application_id = request.POST.get('application_id')
+        status = request.POST.get('status', '').strip()
+
+        if application_id:
+            application = get_object_or_404(job.applications, id=application_id)
+            valid_statuses = ['applied', 'review', 'interview', 'offer', 'closed']
+
+            if status in valid_statuses:
+                application.status = status
+                application.save()
+                if status == 'closed':
+                    messages.success(request, f'{application.applicant.username} was denied and marked as closed.')
+                else:
+                    messages.success(request, f'{application.applicant.username} status updated to {application.status_label}.')
+            else:
+                messages.error(request, 'Invalid application status.')
+
+        return redirect('jobs.applicants', id=job.id)
+
+    applications = job.applications.select_related('applicant').order_by('-submitted_at')
+    template_data = {
+        'title': f'Applicants for {job.title} | LockedIn',
+    }
+
+    return render(request, 'jobs/applicants.html', {
+        'template_data': template_data,
+        'job': job,
+        'applications': applications,
+    })
 
 @login_required
 def create_job(request):
