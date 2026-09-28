@@ -16,6 +16,8 @@ class Profile(models.Model):
     education = models.TextField(blank=True, default='')
     experience = models.TextField(blank=True, default='')
     skills = models.TextField(blank=True, default='')
+    projects = models.TextField(blank=True, default='')
+    location = models.CharField(blank=True, default='', max_length=255)
 
     def __str__(self):
         return f"{self.user.username}'s Profile"

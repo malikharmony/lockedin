@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="container py-5">
+  <h1 class="text-primary fw-bold mb-2">Find Candidates</h1>
+  <p class="text-muted mb-4">
+    Search for job seekers by skills, location, and projects.
+  </p>
+
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body p-4">
+      <form method="get">
+        <div class="mb-3">
+          <label for="skills" class="form-label fw-medium">
+            Skills
+          </label>
+          <input type="text" class="form-control"
+                 id="skills" name="skills"
+                 value="{{ template_data.skills }}">
+        </div>
+
+        <div class="mb-3">
+          <label for="location" class="form-label fw-medium">
+            Location
+          </label>
+          <input type="text" class="form-control"
+                 id="location" name="location"
+                 value="{{ template_data.location }}">
+        </div>
+
+        <div class="mb-3">
+          <label for="projects" class="form-label fw-medium">
+            Projects
+          </label>
+          <input type="text" class="form-control"
+                 id="projects" name="projects"
+                 value="{{ template_data.projects }}">
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+          Search
+        </button>
+
+        <a href="{% url 'search.candidates' %}"
+           class="btn btn-outline-secondary">
+          Clear
+        </a>
+      </form>
+    </div>
+  </div>
+
+  <h2 class="h4 text-primary fw-bold mb-3">
+    Candidates
+  </h2>
+
+  {% for candidate in template_data.candidates %}
+    <div class="card shadow-sm border-0 mb-3">
+      <div class="card-body p-4">
+        <h3 class="h5 text-primary fw-bold">
+          {% if candidate.user.get_full_name %}
+            {{ candidate.user.get_full_name }}
+          {% else %}
+            {{ candidate.user.username }}
+          {% endif %}
+        </h3>
+
+        {% if candidate.headline %}
+          <p>{{ candidate.headline }}</p>
+        {% endif %}
+
+        <p>
+          <strong>Location:</strong>
+          {{ candidate.location }}
+        </p>
+
+        <p>
+          <strong>Skills:</strong>
+          {{ candidate.skills }}
+        </p>
+
+        <p>
+          <strong>Projects:</strong>
+          {{ candidate.projects }}
+        </p>
+
+        <a href="{% url 'accounts.profile' username=candidate.user.username %}"
+           class="btn btn-outline-primary">
+          View Profile
+        </a>
+      </div>
+    </div>
+  {% empty %}
+    <div class="alert alert-info">
+      No candidates match your search.
+    </div>
+  {% endfor %}
+</section>
+{% endblock content %}
