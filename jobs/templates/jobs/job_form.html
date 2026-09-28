@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4 p-md-5">
+          <h2 class="card-title text-primary fw-bold mb-2">
+            {% if job %}Edit Job{% else %}Post a Job{% endif %}
+          </h2>
+          <p class="text-muted mb-4">
+            Describe your job position so candidates can find the right opportunity.
+          </p>
+          <hr class="mb-4">
+
+          <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label for="title" class="form-label fw-medium">Job Title</label>
+              <input type="text" class="form-control"
+                     id="title" name="title" maxlength="255"
+                     value="{{ job.title }}" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="description" class="form-label fw-medium">
+                Job Description
+              </label>
+              <textarea class="form-control" id="description"
+                        name="description" rows="5" required>{{ job.description }}</textarea>
+            </div>
+
+            <div class="mb-3">
+              <label for="location" class="form-label fw-medium">Location</label>
+              <input type="text" class="form-control"
+                     id="location" name="location" maxlength="255"
+                     value="{{ job.location }}" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="required_skills" class="form-label fw-medium">
+                Required Skills
+              </label>
+              <textarea class="form-control" id="required_skills"
+                        name="required_skills" rows="3" required>{{ job.required_skills }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="work_type" class="form-label fw-medium">
+                    Work Type
+                </label>
+                <select id="work_type" name="work_type" class="form-select" required>
+                    <option value="">Select a work type</option>
+                    <option value="in-person" {% if job.work_type == 'in-person' %}selected{% endif %}>In-person</option>
+                    <option value="hybrid" {% if job.work_type == 'hybrid' %}selected{% endif %}>Hybrid</option>
+                    <option value="remote" {% if job.work_type == 'remote' %}selected{% endif %}>Remote</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="salary_min" class="form-label fw-medium">Minimum Annual Salary</label>
+              <input type="number" class="form-control"
+                     id="salary_min" name="salary_min" min="0" max="99999999"
+                     step="1" value="{{ job.salary_min }}" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="salary_max" class="form-label fw-medium">Maximum Annual Salary</label>
+              <input type="number" class="form-control"
+                     id="salary_max" name="salary_max" min="0" max="99999999"
+                     step="1" value="{{ job.salary_max }}" required>
+            </div>
+
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input"
+                    id="visa_sponsorship" name="visa_sponsorship"
+                    {% if job.visa_sponsorship %}checked{% endif %}>
+                <label class="form-check-label" for="visa_sponsorship">Visa Sponsorship Available</label>
+            </div>
+
+            {% if job %}
+              <div class="mb-3">
+                <label for="status" class="form-label fw-medium">Status</label>
+                <select id="status" name="status" class="form-select" required>
+                  <option value="active" {% if job.status == 'active' %}selected{% endif %}>Active</option>
+                  <option value="closed" {% if job.status == 'closed' %}selected{% endif %}>Closed</option>
+                </select>
+              </div>
+            {% endif %}
+
+            <hr class="my-4">
+            <div class="d-flex justify-content-end">
+              <button type="submit" class="btn btn-primary px-4">
+                {% if job %}Save Changes{% else %}Save Job{% endif %}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}
