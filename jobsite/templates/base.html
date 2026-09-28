@@ -33,6 +33,19 @@
                 <li class="nav-item">
                   <a class="nav-link" href="#">Applications</a>
                 </li>
+                {% if user.profile.role == 'employer' %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'jobs.my_jobs' %}">
+                    My Postings
+                  </a>
+                </li>
+
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'jobs.create' %}">
+                    Post a Job
+                  </a>
+                </li>
+              {% endif %}
               </ul>
               <div class="d-flex align-items-center gap-3">
                 <form class="d-flex" role="search" action="{% url 'search.index' %}" method="get">
