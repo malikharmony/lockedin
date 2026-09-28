@@ -27,6 +27,15 @@
     <div class="col-lg-8 col-md-7">
       <div class="d-flex flex-column gap-4">
         <div>
+          <h3 class="text-primary fw-bold fs-4 mb-2">Location</h3>
+          {% if profile.location %}
+            <p class="text-secondary mb-0">{{ profile.location }}</p>
+          {% else %}
+            <p class="text-muted fst-italic mb-0">No location provided yet.</p>
+          {% endif %}
+        </div>
+
+        <div>
           <h3 class="text-primary fw-bold fs-4 mb-2">About</h3>
           {% if profile.about %}
             <p class="text-secondary mb-0">{{ profile.about|linebreaksbr }}</p>
@@ -59,6 +68,15 @@
             <p class="text-secondary mb-0">{{ profile.skills|linebreaksbr }}</p>
           {% else %}
             <p class="text-muted fst-italic mb-0">No skills listed yet.</p>
+          {% endif %}
+        </div>
+
+        <div>
+          <h3 class="text-primary fw-bold fs-4 mb-2">Projects</h3>
+          {% if profile.projects %}
+            <p class="text-secondary mb-0">{{ profile.projects|linebreaksbr }}</p>
+          {% else %}
+            <p class="text-muted fst-italic mb-0">No projects added yet.</p>
           {% endif %}
         </div>
       </div>
