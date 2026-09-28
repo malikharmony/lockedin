@@ -43,9 +43,23 @@
                     </button>
                   </div>
                 </form>
-                <a href="{% url 'accounts.profile' username=user.username %}" class="text-white" aria-label="User Profile">
-                  <i class="fa-regular fa-circle-user fa-2x"></i>
-                </a>
+                <div class="dropdown">
+                  <button class="btn text-white p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open profile menu">
+                    <i class="fa-regular fa-circle-user fa-2x"></i>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="{% url 'accounts.profile' username=user.username %}">Profile</a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                      <form method="post" action="{% url 'accounts.logout' %}">
+                        {% csrf_token %}
+                        <button class="dropdown-item" type="submit">Log out</button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
               </div>
             {% else %}
               <ul class="navbar-nav mx-auto mb-2 mb-lg-0 align-items-center">
