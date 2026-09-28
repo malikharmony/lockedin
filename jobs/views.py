@@ -7,7 +7,12 @@ from django.shortcuts import get_object_or_404
 
 
 def index(request):
-    return render(request, 'jobs/index.html')
+    jobs = JobPosting.objects.filter(status='active').order_by('-date')
+    template_data = {
+        'title': 'Job Discovery | LockedIn',
+        'jobs': jobs,
+    }
+    return render(request, 'jobs/index.html', context={'template_data': template_data})
 
 @login_required
 def create_job(request):
