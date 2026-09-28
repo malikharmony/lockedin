@@ -35,7 +35,7 @@
                 </li>
                 {% if user.profile.role == 'job_seeker' %}
                 <li class="nav-item">
-                  <a class="nav-link" href="#">For You</a>
+                  <a class="nav-link" href="{% url 'jobs.for_you' %}">For You</a>
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="{% url 'jobs.applications' %}">Applications</a>

@@ -54,6 +54,44 @@ def index(request):
     return render(request, 'jobs/index.html', context={'template_data': template_data})
 
 
+@login_required
+def for_you(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    if profile.role != 'job_seeker':
+        messages.error(request, 'This page is only for job seekers.')
+        return redirect('home.index')
+
+    user_skills = {
+        skill.strip().lower()
+        for skill in (profile.skills or '').replace(',', ' ').split()
+        if skill.strip()
+    }
+
+    jobs = JobPosting.objects.filter(status='active').order_by('-date')
+    recommended_jobs = []
+
+    if user_skills:
+        for job in jobs:
+            job_skills = {
+                skill.strip().lower()
+                for skill in (job.required_skills or '').replace(',', ' ').split()
+                if skill.strip()
+            }
+            if user_skills & job_skills:
+                recommended_jobs.append(job)
+
+    template_data = {
+        'title': 'For You | LockedIn',
+    }
+
+    return render(request, 'jobs/for_you.html', {
+        'template_data': template_data,
+        'jobs': recommended_jobs,
+        'has_profile_skills': bool(user_skills),
+    })
+
+
 def detail(request, id):
     job = get_object_or_404(JobPosting, id=id, status='active')
     template_data = {
