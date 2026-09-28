@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="container py-5">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="text-primary fw-bold mb-1">My Postings</h1>
+      <p class="text-muted mb-0">
+        View and manage the job opportunities you have posted.
+      </p>
+    </div>
+
+    <a href="{% url 'jobs.create' %}" class="btn btn-primary px-4">
+      <i class="fa-solid fa-plus me-2" aria-hidden="true"></i>
+      Post a New Job
+    </a>
+  </div>
+
+  <div class="row g-4">
+    {% for job in template_data.jobs %}
+      <div class="col-12">
+        <article class="card shadow-sm border-0">
+          <div class="card-body p-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+              <div>
+                <h2 class="h4 text-primary fw-bold mb-2">
+                  {{ job.title }}
+                </h2>
+
+                <p class="text-muted mb-2">
+                  <i class="fa-solid fa-location-dot me-1"
+                     aria-hidden="true"></i>
+                  {{ job.location }}
+                  <span class="mx-2">-</span>
+                  {{ job.get_work_type_display }}
+                </p>
+              </div>
+
+              <div>
+                {% if job.status == 'active' %}
+                  <span class="badge text-bg-success">
+                    {{ job.get_status_display }}
+                  </span>
+                {% elif job.status == 'closed' %}
+                  <span class="badge text-bg-secondary">
+                    {{ job.get_status_display }}
+                  </span>
+                {% else %}
+                  <span class="badge text-bg-danger">
+                    {{ job.get_status_display }}
+                  </span>
+                {% endif %}
+              </div>
+
+              {% if job.status != 'removed' %}
+              <a href="{% url 'jobs.edit' id=job.id %}"
+                class="btn btn-outline-primary">
+                Edit
+              </a>
+              {% endif %}
+            </div>
+
+            <p class="mb-2">
+              {{ job.description }}
+            </p>
+
+            <p class="mb-2">
+              <strong>Required skills:</strong>
+              {{ job.required_skills }}
+            </p>
+
+            <p class="mb-2">
+              <strong>Annual salary:</strong>
+              ${{ job.salary_min }} - ${{ job.salary_max }}
+            </p>
+
+            <p class="mb-0">
+              <strong>Visa sponsorship:</strong>
+              {% if job.visa_sponsorship %}
+                Available
+              {% else %}
+                Not available
+              {% endif %}
+            </p>
+
+            <hr>
+
+            <p class="small text-muted mb-0">
+              Posted {{ job.date }}
+            </p>
+          </div>
+        </article>
+      </div>
+    {% empty %}
+      <div class="col-12">
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-5 text-center">
+            <i class="fa-regular fa-folder-open fa-3x text-muted mb-3"
+               aria-hidden="true"></i>
+
+            <h2 class="h4">You haven't posted any jobs yet.</h2>
+
+            <p class="text-muted">
+              Create your first posting to start finding candidates.
+            </p>
+
+            <a href="{% url 'jobs.create' %}" class="btn btn-primary">
+              Post a Job
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock content %}
