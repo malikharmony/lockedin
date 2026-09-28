@@ -1,8 +1,6 @@
 from django.db import models
 from django.conf import settings
 
-# Create your models here.
-
 class JobPosting(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
@@ -61,3 +59,40 @@ class JobApplication(models.Model):
     @property
     def status_label(self):
         return dict(self.STATUS_CHOICES).get(self.status, self.status)
+
+
+class JobReport(models.Model):
+    REASON_CHOICES = [
+        ('inappropriate', 'Inappropriate or Offensive Content'),
+        ('spam', 'Spam, Scam, or Phishing'),
+        ('misleading', 'Misleading or Fraudulent Information'),
+        ('expired', 'No Longer Available / Expired'),
+        ('other', 'Other Reason'),
+    ]
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('reviewed', 'Reviewed'),
+        ('dismissed', 'Dismissed'),
+        ('action_taken', 'Action Taken (Job Removed)'),
+    ]
+
+    job = models.ForeignKey(JobPosting, on_delete=models.CASCADE, related_name='reports')
+    reporter = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='job_reports',
+    )
+    reason = models.CharField(max_length=50, choices=REASON_CHOICES)
+    details = models.TextField(blank=True, default='')
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    admin_notes = models.TextField(blank=True, default='')
+
+    class Meta:
+        ordering = ('-created_at',)
+
+    def __str__(self):
+        return f"Report on {self.job.title} - {self.get_reason_display()}"
